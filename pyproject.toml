@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt-terminal-downloader"
+version = "1.0.0"
+description = "Interactive terminal YouTube video and audio downloader."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["yt-dlp"]
+
+[project.scripts]
+ytd = "yt_downloader.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
