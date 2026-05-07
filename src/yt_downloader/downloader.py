@@ -6,6 +6,9 @@ class DownloaderError(RuntimeError):
     pass
 
 
+M4A_AUDIO_FORMAT = "bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio[acodec^=mp4a]/best[ext=mp4]"
+
+
 def require_ytdlp():
     try:
         import yt_dlp
@@ -29,8 +32,8 @@ def build_options(media_type: str, quality: str, audio_format: str, output_dir: 
     }
 
     if media_type == "audio":
-        options["format"] = "bestaudio/best"
-        if audio_format != "original" and ffmpeg_available:
+        if audio_format in {"mp3", "opus"} and ffmpeg_available:
+            options["format"] = "bestaudio/best"
             options["postprocessors"] = [
                 {
                     "key": "FFmpegExtractAudio",
@@ -38,6 +41,8 @@ def build_options(media_type: str, quality: str, audio_format: str, output_dir: 
                     "preferredquality": "192",
                 }
             ]
+        else:
+            options["format"] = M4A_AUDIO_FORMAT
         return options
 
     if not ffmpeg_available:
