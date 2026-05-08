@@ -16,7 +16,6 @@ YT Downloader/YT Downloader.exe
 
 Keep the full `YT Downloader` folder together when moving or sharing the app. The `_internal` folder contains the bundled Python runtime, packages, Tkinter files, and FFmpeg.
 
-The Windows release includes FFmpeg, so video merging and audio conversion work without installing FFmpeg separately.
 
 ## GUI
 
