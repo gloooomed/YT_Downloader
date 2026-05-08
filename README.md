@@ -14,8 +14,9 @@ After downloading, extract the release zip and open the app by double-clicking:
 YT Downloader/YT Downloader.exe
 ```
 
-Keep the full `YT Downloader` folder together when moving or sharing the app. The `_internal` folder contains the bundled Python runtime, packages, Tkinter files, and FFmpeg.
+Keep the full `YT Downloader` folder together when moving or sharing the app. The `_internal` folder contains the bundled Python runtime, packages, and Tkinter files.
 
+FFmpeg is not bundled. For MP3 conversion and best-quality video merging, install FFmpeg separately and make sure it is available in `PATH`.
 
 ## GUI
 
