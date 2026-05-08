@@ -12,6 +12,7 @@ dependencies = ["yt-dlp"]
 
 [project.scripts]
 ytd = "yt_downloader.cli:main"
+ytd-gui = "yt_downloader.gui:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

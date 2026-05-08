@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 from pathlib import Path
 from shutil import which
+import sys
+from typing import Callable
 
 
 class DownloaderError(RuntimeError):
@@ -7,6 +11,7 @@ class DownloaderError(RuntimeError):
 
 
 M4A_AUDIO_FORMAT = "bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio[acodec^=mp4a]/best[ext=mp4]"
+ProgressHook = Callable[[dict], None]
 
 
 def require_ytdlp():
@@ -19,17 +24,30 @@ def require_ytdlp():
     return yt_dlp
 
 
-def build_options(media_type: str, quality: str, audio_format: str, output_dir: Path) -> dict:
+def build_options(
+    media_type: str,
+    quality: str,
+    audio_format: str,
+    output_dir: Path,
+    progress_hook: ProgressHook | None = None,
+) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
-    ffmpeg_available = has_ffmpeg()
+    ffmpeg_location = get_ffmpeg_location()
+    ffmpeg_available = ffmpeg_location is not None
+    progress_hooks = [_progress]
+    if progress_hook is not None:
+        progress_hooks.append(progress_hook)
+
     options = {
         "outtmpl": str(output_dir / "%(title).180s [%(id)s].%(ext)s"),
         "noplaylist": True,
         "restrictfilenames": False,
         "quiet": False,
         "no_warnings": False,
-        "progress_hooks": [_progress],
+        "progress_hooks": progress_hooks,
     }
+    if ffmpeg_location is not None:
+        options["ffmpeg_location"] = str(ffmpeg_location)
 
     if media_type == "audio":
         if audio_format in {"mp3", "opus"} and ffmpeg_available:
@@ -60,9 +78,16 @@ def build_options(media_type: str, quality: str, audio_format: str, output_dir: 
     return options
 
 
-def download(url: str, media_type: str, quality: str, audio_format: str, output_dir: Path) -> None:
+def download(
+    url: str,
+    media_type: str,
+    quality: str,
+    audio_format: str,
+    output_dir: Path,
+    progress_hook: ProgressHook | None = None,
+) -> None:
     yt_dlp = require_ytdlp()
-    options = build_options(media_type, quality, audio_format, output_dir)
+    options = build_options(media_type, quality, audio_format, output_dir, progress_hook)
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
             ydl.download([url])
@@ -76,4 +101,25 @@ def _progress(status: dict) -> None:
 
 
 def has_ffmpeg() -> bool:
-    return which("ffmpeg") is not None and which("ffprobe") is not None
+    return get_ffmpeg_location() is not None
+
+
+def get_ffmpeg_location() -> Path | None:
+    bundled = _bundled_ffmpeg_dir()
+    if bundled is not None:
+        return bundled
+    if which("ffmpeg") is not None and which("ffprobe") is not None:
+        return Path(which("ffmpeg")).parent
+    return None
+
+
+def _bundled_ffmpeg_dir() -> Path | None:
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
+    candidates = [
+        base / "ffmpeg",
+        base / "vendor" / "ffmpeg" / "bin",
+    ]
+    for candidate in candidates:
+        if (candidate / "ffmpeg.exe").exists() and (candidate / "ffprobe.exe").exists():
+            return candidate
+    return None
